@@ -140,6 +140,7 @@ resource environment 'Microsoft.App/managedEnvironments@2022-03-01' = {
   name: containerAppEnvironmentName
   location: location
   properties: {
+    daprAIInstrumentationKey: appInsights.properties.InstrumentationKey
     appLogsConfiguration: {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
@@ -405,6 +406,8 @@ resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-03
   properties: {
     componentType: 'pubsub.azure.servicebus'
     version: 'v1'
+    ignoreErrors: false
+    initTimeout: '5s'
     secrets: [
       {
         name: 'servicebusconnectionstring'
@@ -422,7 +425,7 @@ resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-03
       }
     ]
     scopes: [
-      oderprocessor.name
+      oderprocessorAppName
     ]
   }
 }
