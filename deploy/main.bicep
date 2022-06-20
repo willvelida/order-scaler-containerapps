@@ -114,7 +114,6 @@ resource writeContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/cont
         ]
         kind: 'Hash'
       }
-      defaultTtl: 600
       indexingPolicy: {
         indexingMode: 'consistent'
         includedPaths: [
@@ -186,6 +185,10 @@ resource orderweb 'Microsoft.App/containerApps@2022-03-01' = {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
               value: appInsights.properties.ConnectionString
             }
+            {
+              name: 'OrdersApi'
+              value: 'https://${orderapi.properties.configuration.ingress.fqdn}'
+            }
           ]
         }
       ]
@@ -200,7 +203,7 @@ resource orderweb 'Microsoft.App/containerApps@2022-03-01' = {
   }
 }
 
-resource orderApi 'Microsoft.App/containerApps@2022-03-01' = {
+resource orderapi 'Microsoft.App/containerApps@2022-03-01' = {
   name: oderApiAppName
   location: location
   properties: {
@@ -257,12 +260,16 @@ resource orderApi 'Microsoft.App/containerApps@2022-03-01' = {
               name: 'servicebusconnectionstring'
               secretRef: 'servicebusconnectionstring'
             }
+            {
+              name: 'queuename'
+              value: ordersQueue.name
+            }
           ]
         }
       ]
       scale: {
-        minReplicas: 0
-        maxReplicas: 30
+        minReplicas: 1
+        maxReplicas: 10
       }
     }
   }
@@ -310,7 +317,7 @@ resource oderprocessor 'Microsoft.App/containerApps@2022-03-01' = {
       containers: [
         {
           image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
-          name: orderwebAppName
+          name: oderprocessorAppName
           env: [
             {
               name: 'ASPNETCORE_ENVIRONMENT'
@@ -331,6 +338,10 @@ resource oderprocessor 'Microsoft.App/containerApps@2022-03-01' = {
             {
               name: 'cosmosdbconnectionstring'
               secretRef: 'cosmosdbconnectionstring'
+            }
+            {
+              name: 'queuename'
+              value: ordersQueue.name
             }
           ]
         }

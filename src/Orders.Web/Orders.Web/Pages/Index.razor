@@ -1,0 +1,33 @@
+﻿@page "/"
+@using Orders.Web.Data
+@inject OrderServiceClient OrderServiceClient
+
+<PageTitle>Index</PageTitle>
+
+<h1>Order Generator</h1>
+
+Enter a number below to generate some orders!.
+
+<EditForm Model="@orderSubmissionModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <p>
+        <label>
+            Number of Orders:
+            <InputNumber @bind-Value="orderSubmissionModel.NumberOfOrders" />
+        </label>
+    </p>
+
+    <button type="submit">Submit</button>
+</EditForm>
+
+@code
+{
+    private OrderSubmissionModel orderSubmissionModel = new();
+
+    private async Task HandleValidSubmit()
+    {
+        await OrderServiceClient.CreateOrders(orderSubmissionModel.NumberOfOrders);
+    }
+}
