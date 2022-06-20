@@ -349,8 +349,16 @@ resource oderprocessor 'Microsoft.App/containerApps@2022-03-01' = {
               secretRef: 'cosmosdbconnectionstring'
             }
             {
-              name: 'queuename'
+              name: 'ordersqueuename'
               value: ordersQueue.name
+            }
+            {
+              name: 'databasename'
+              value: database.name
+            }
+            {
+              name: 'containername'
+              value: writeContainer.name
             }
           ]
         }
