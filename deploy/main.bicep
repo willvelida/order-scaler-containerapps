@@ -413,8 +413,12 @@ resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-03
     ]
     metadata: [
       {
-        name: 'servicebusconnectionstring'
+        name: 'connectionString'
         secretRef: 'servicebusconnectionstring'
+      }
+      {
+        name: 'queueName'
+        value: ordersQueue.name
       }
     ]
     scopes: [
