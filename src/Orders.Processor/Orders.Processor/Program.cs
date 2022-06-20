@@ -1,50 +1,48 @@
-﻿using Azure.Messaging.ServiceBus;
+using Dapr;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
-using Orders.Processor;
 
-IConfiguration configuration = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables()
-    .Build();
+var builder = WebApplication.CreateBuilder(args);
 
-ServiceBusClient serviceBusClient = new ServiceBusClient(configuration["servicebusconnectionstring"]);
-ServiceBusProcessor processor = serviceBusClient.CreateProcessor(configuration["ordersqueuename"]);
-CosmosClient cosmosClient = new CosmosClient(configuration["cosmosdbconnectionstring"]);
-Container container = cosmosClient.GetContainer(configuration["databasename"], configuration["containername"]);
-
-try
+// Add services to the container.
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Configuration.AddEnvironmentVariables();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton(sp =>
 {
-    processor.ProcessMessageAsync += MessageHandler;
-    processor.ProcessErrorAsync += ErrorHandler;
+    CosmosClient cosmosClient = new CosmosClient(builder.Configuration.GetValue<string>("cosmosdbconnectionstring"));
+    Container orderContainer = cosmosClient.GetContainer(
+        builder.Configuration.GetValue<string>("databasename"),
+        builder.Configuration.GetValue<string>("containername"));
+    return orderContainer;
+});
 
-    await processor.StartProcessingAsync();
+var app = builder.Build();
 
-    Console.WriteLine("Processing Messages");
+app.UseCloudEvents();
+app.MapSubscribeHandler();
 
-    await processor.StopProcessingAsync();
-    Console.WriteLine("Orders Processed");
-}
-finally
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
 {
-    await processor.DisposeAsync();
-    await serviceBusClient.DisposeAsync();
-    cosmosClient.Dispose();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
-async Task MessageHandler(ProcessMessageEventArgs args)
-{
-    string body = args.Message.Body.ToString();
-    OrderItem order = JsonConvert.DeserializeObject<OrderItem>(body);
-    order.id = Guid.NewGuid().ToString();
-    Console.WriteLine($"Processing Order Id: {order.OrderId}");
-    await args.CompleteMessageAsync(args.Message);
-    await container.CreateItemAsync(order, new PartitionKey(order.id));
-}
+app.UseHttpsRedirection();
 
-Task ErrorHandler(ProcessErrorEventArgs args)
+app.MapPost("/orders", [Topic("dapr-pubsub", "orders")] async (OrderItem order, Container container) =>
 {
-    Console.WriteLine(args.Exception.ToString());
-    return Task.CompletedTask;
+    Console.WriteLine("Subscriber received: " + order);
+    await container.CreateItemAsync(order, new PartitionKey(order.Id));
+    return Results.Ok(order);
+});
+
+app.Run();
+
+public class OrderItem
+{
+    public int Id { get; set; }
+    public string OrderId { get; set; }
+    public string OrderName { get; set; }
 }
