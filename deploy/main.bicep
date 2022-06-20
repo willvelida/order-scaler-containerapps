@@ -27,7 +27,6 @@ var orderwebAppName = 'order-web'
 var oderApiAppName = 'order-api'
 var oderprocessorAppName = 'order-processor'
 var targetPort = 80
-var daprPort = 3500
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2021-12-01-preview' = {
   name: containerRegistryName
@@ -299,6 +298,7 @@ resource oderprocessor 'Microsoft.App/containerApps@2022-03-01' = {
       dapr: {
         appId: oderprocessorAppName
         appProtocol: 'http'
+        appPort: targetPort
         enabled: true
       }
       secrets: [
@@ -324,7 +324,7 @@ resource oderprocessor 'Microsoft.App/containerApps@2022-03-01' = {
       ]
       ingress: {
         external: false
-        targetPort: daprPort
+        targetPort: targetPort
         transport: 'http'
         allowInsecure: true
       }
