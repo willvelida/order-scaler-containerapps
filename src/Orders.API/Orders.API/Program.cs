@@ -9,13 +9,14 @@ ServiceBusSender _queueClient;
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton(sp =>
 {
-    ServiceBusClient serviceBusClient = new ServiceBusClient(Environment.GetEnvironmentVariable("servicebusconnectionstring"));
-    _queueClient = serviceBusClient.CreateSender(Environment.GetEnvironmentVariable("queuename"));
+    ServiceBusClient serviceBusClient = new ServiceBusClient(builder.Configuration.GetValue<string>("servicebusconnectionstring"));
+    _queueClient = serviceBusClient.CreateSender(builder.Configuration.GetValue<string>("queuename"));
     return _queueClient;
 });
 
