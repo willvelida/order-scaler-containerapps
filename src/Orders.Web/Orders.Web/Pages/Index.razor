@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using Orders.Web.Data
-@inject OrderServiceClient OrderServiceClient
+@using Orders.Web.Data.Interfaces
+@inject IOrderServiceClient _orderServiceClient
 
 <PageTitle>Index</PageTitle>
 
@@ -28,6 +29,6 @@ Enter a number below to generate some orders!.
 
     private async Task HandleValidSubmit()
     {
-        await OrderServiceClient.CreateOrders(orderSubmissionModel.NumberOfOrders);
+        await _orderServiceClient.CreateOrders(orderSubmissionModel.NumberOfOrders);
     }
 }
