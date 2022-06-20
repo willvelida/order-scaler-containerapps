@@ -1,4 +1,4 @@
-name: Build and Deploy Book API
+name: Build and Deploy Web
 
 on:
   workflow_dispatch:
