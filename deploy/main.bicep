@@ -369,6 +369,28 @@ resource oderprocessor 'Microsoft.App/containerApps@2022-03-01' = {
               value: writeContainer.name
             }
           ]
+          probes:[
+            {
+              type: 'Readiness'
+              httpGet: {
+                port: targetPort
+                path: '/probes/ready'
+              }
+              timeoutSeconds: 30
+              successThreshold: 1
+              failureThreshold: 10
+              periodSeconds: 10
+            }
+            {
+              type: 'Startup'
+              httpGet: {
+                port: targetPort
+                path: '/probes/healthz'
+              }
+              failureThreshold: 6
+              periodSeconds: 10
+            }
+          ]
         }
       ]
       scale: {
@@ -411,7 +433,7 @@ resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-03
     secrets: [
       {
         name: 'servicebusconnectionstring'
-        value: 'Endpoint=sb://${serviceBus.name}.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=${listKeys(servicebusEndpoint, serviceBus.apiVersion).primaryKey}'
+        value: listKeys('${serviceBus.id}/AuthorizationRules/RootManageSharedAccessKey', serviceBus.apiVersion).primaryConnectionString
       }
     ]
     metadata: [
