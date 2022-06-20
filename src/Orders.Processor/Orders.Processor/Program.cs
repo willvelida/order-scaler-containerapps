@@ -38,7 +38,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapPost("/orders", [Topic("dapr-pubsub", "orders")] async (OrderItem order, Container container) =>
+app.MapGet("/subscribe", [Topic("dapr-pubsub", "orders")] async (OrderItem order, Container container) =>
 {
     try
     {
