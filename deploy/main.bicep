@@ -294,6 +294,12 @@ resource oderprocessor 'Microsoft.App/containerApps@2022-03-01' = {
     managedEnvironmentId: environment.id
     configuration: {
       activeRevisionsMode: 'Multiple'
+      dapr: {
+        appId: oderprocessorAppName
+        appPort: 3000
+        appProtocol: 'http'
+        enabled: true
+      }
       secrets: [
         {
           name: 'container-registry-password'
@@ -389,5 +395,29 @@ resource oderprocessor 'Microsoft.App/containerApps@2022-03-01' = {
   }
   identity: {
     type: 'SystemAssigned'
+  }
+}
+
+resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2022-03-01' = {
+  name: 'dapr-pubsub'
+  parent: environment
+  properties: {
+    componentType: 'pubsub.azure.servicebus'
+    version: 'v1'
+    secrets: [
+      {
+        name: 'servicebusconnectionstring'
+        value: 'Endpoint=sb://${serviceBus.name}.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=${listKeys(servicebusEndpoint, serviceBus.apiVersion).primaryKey}'
+      }
+    ]
+    metadata: [
+      {
+        name: 'servicebusconnectionstring'
+        secretRef: 'servicebusconnectionstring'
+      }
+    ]
+    scopes: [
+      oderprocessor.name
+    ]
   }
 }
