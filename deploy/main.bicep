@@ -27,7 +27,7 @@ var orderwebAppName = 'order-web'
 var oderApiAppName = 'order-api'
 var oderprocessorAppName = 'order-processor'
 var targetPort = 80
-var daprPort = 3000
+var daprPort = 3500
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2021-12-01-preview' = {
   name: containerRegistryName
@@ -298,7 +298,6 @@ resource oderprocessor 'Microsoft.App/containerApps@2022-03-01' = {
       activeRevisionsMode: 'Multiple'
       dapr: {
         appId: oderprocessorAppName
-        appPort: daprPort
         appProtocol: 'http'
         enabled: true
       }
