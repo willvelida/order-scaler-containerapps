@@ -38,11 +38,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/subscribe", [Topic("dapr-pubsub", "orders")] async (OrderItem order, Container container) =>
+app.MapPost("/subscribe", [Topic("dapr-pubsub", "orders")] async (OrderItem order, Container container) =>
 {
     try
     {
         logger.LogInformation("Subscriber received: " + order);
+        order.Id = Guid.NewGuid().ToString();
         await container.CreateItemAsync(order, new PartitionKey(order.Id));
         return Results.Ok(order);
     }
@@ -57,7 +58,7 @@ app.Run();
 
 public class OrderItem
 {
-    public int Id { get; set; }
+    public string Id { get; set; }
     public string OrderId { get; set; }
     public string OrderName { get; set; }
 }
