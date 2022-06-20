@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Orders.Processor;
 
 IConfiguration configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables()
     .Build();
 
@@ -36,8 +37,10 @@ async Task MessageHandler(ProcessMessageEventArgs args)
 {
     string body = args.Message.Body.ToString();
     OrderItem order = JsonConvert.DeserializeObject<OrderItem>(body);
-    await container.CreateItemAsync(order, new PartitionKey(order.OrderId));
+    order.id = Guid.NewGuid().ToString();
+    Console.WriteLine($"Processing Order Id: {order.OrderId}");
     await args.CompleteMessageAsync(args.Message);
+    await container.CreateItemAsync(order, new PartitionKey(order.id));
 }
 
 Task ErrorHandler(ProcessErrorEventArgs args)
