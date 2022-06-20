@@ -26,6 +26,7 @@ var orderQueueName = 'orders'
 var orderwebAppName = 'order-web'
 var oderApiAppName = 'order-api'
 var oderprocessorAppName = 'order-processor'
+var targetPort = 80
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2021-12-01-preview' = {
   name: containerRegistryName
@@ -171,7 +172,7 @@ resource orderweb 'Microsoft.App/containerApps@2022-03-01' = {
       ]
       ingress: {
         external: true
-        targetPort: 80
+        targetPort: targetPort
         transport: 'http'
         allowInsecure: true
       }
@@ -242,7 +243,7 @@ resource orderapi 'Microsoft.App/containerApps@2022-03-01' = {
       ]
       ingress: {
         external: false
-        targetPort: 80
+        targetPort: targetPort
         transport: 'http'
         allowInsecure: true
       }
@@ -296,7 +297,7 @@ resource oderprocessor 'Microsoft.App/containerApps@2022-03-01' = {
       activeRevisionsMode: 'Multiple'
       dapr: {
         appId: oderprocessorAppName
-        appPort: 3000
+        appPort: targetPort
         appProtocol: 'http'
         enabled: true
       }
@@ -323,7 +324,7 @@ resource oderprocessor 'Microsoft.App/containerApps@2022-03-01' = {
       ]
       ingress: {
         external: false
-        targetPort: 80
+        targetPort: targetPort
         transport: 'http'
         allowInsecure: true
       }
