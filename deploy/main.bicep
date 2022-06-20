@@ -4,6 +4,15 @@ param location string = resourceGroup().location
 @description('Name of our application.')
 param applicationName string = uniqueString(resourceGroup().id)
 
+@description('The current image for the web application')
+param webImageName string
+
+@description('The current image for the api application')
+param apiImageName string
+
+@description('The current image for the processor application')
+param processorImageName string
+
 var containerRegistryName = '${applicationName}acr'
 var logAnalyticsWorkspaceName = '${applicationName}law'
 var appInsightsName = '${applicationName}ai'
@@ -170,7 +179,7 @@ resource orderweb 'Microsoft.App/containerApps@2022-03-01' = {
     template: {
       containers: [
         {
-          image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+          image: webImageName
           name: orderwebAppName
           env: [
             {
@@ -241,7 +250,7 @@ resource orderapi 'Microsoft.App/containerApps@2022-03-01' = {
     template: {
       containers: [
         {
-          image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+          image: apiImageName
           name: oderApiAppName
           env: [
             {
@@ -316,7 +325,7 @@ resource oderprocessor 'Microsoft.App/containerApps@2022-03-01' = {
     template: {
       containers: [
         {
-          image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+          image: processorImageName
           name: oderprocessorAppName
           env: [
             {
