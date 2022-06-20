@@ -16,6 +16,13 @@ builder.Services.AddSingleton(sp =>
         builder.Configuration.GetValue<string>("containername"));
     return orderContainer;
 });
+builder.Services.AddApplicationInsightsTelemetry();
+
+var logger = LoggerFactory.Create(config =>
+{
+    config.AddConsole();
+    config.AddApplicationInsights();
+}).CreateLogger("Program");
 
 var app = builder.Build();
 
@@ -33,9 +40,17 @@ app.UseHttpsRedirection();
 
 app.MapPost("/orders", [Topic("dapr-pubsub", "orders")] async (OrderItem order, Container container) =>
 {
-    Console.WriteLine("Subscriber received: " + order);
-    await container.CreateItemAsync(order, new PartitionKey(order.Id));
-    return Results.Ok(order);
+    try
+    {
+        logger.LogInformation("Subscriber received: " + order);
+        await container.CreateItemAsync(order, new PartitionKey(order.Id));
+        return Results.Ok(order);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError($"Exception thrown in {nameof(Program)}: {ex.Message}");
+        throw;
+    }
 });
 
 app.Run();

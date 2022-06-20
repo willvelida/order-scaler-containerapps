@@ -19,6 +19,13 @@ builder.Services.AddSingleton(sp =>
     _queueClient = serviceBusClient.CreateSender(builder.Configuration.GetValue<string>("queuename"));
     return _queueClient;
 });
+builder.Services.AddApplicationInsightsTelemetry();
+
+var logger = LoggerFactory.Create(config =>
+{
+    config.AddConsole();
+    config.AddApplicationInsights();
+}).CreateLogger("Program");
 
 var app = builder.Build();
 
@@ -33,17 +40,27 @@ app.UseHttpsRedirection();
 
 app.MapPost("/orders/{numberOfOrders}", async (int numberOfOrders, ServiceBusSender queueClient) =>
 {
-    var orders = new Faker<OrderItem>()
+    try
+    {
+        var orders = new Faker<OrderItem>()
         .RuleFor(o => o.OrderId, (fake) => Guid.NewGuid().ToString())
         .RuleFor(o => o.OrderName, (fake) => fake.Commerce.ProductName())
         .Generate(numberOfOrders);
 
-    foreach (var order in orders)
-    {
-        await queueClient.SendMessageAsync(new ServiceBusMessage(JsonConvert.SerializeObject(order)));
-    }
+        foreach (var order in orders)
+        {
+            await queueClient.SendMessageAsync(new ServiceBusMessage(JsonConvert.SerializeObject(order)));
+            logger.LogInformation($"Sent Order ID: {order.OrderId} to service bus");
+        }
 
-    return Results.NoContent();
+        return Results.NoContent();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError($"Exception thrown in {nameof(Program)}: {ex.Message}");
+        throw;
+    }
+    
 }).WithName("CreateOrders");
 
 app.Run();
